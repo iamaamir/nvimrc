@@ -34,6 +34,19 @@ return {
 
       -- ... and there is more!
       --  Check out: https://github.com/echasnovski/mini.nvim
+      --  Mini file explorer
+
+      require('mini.files').setup()
+      local minifiles_toggle = function()
+        if not MiniFiles.close() then
+          MiniFiles.open()
+        end
+      end
+      local reveal_current_file = function()
+        MiniFiles.open(vim.api.nvim_buf_get_name(0))
+      end
+      vim.keymap.set('n', '<Leader>e', minifiles_toggle)
+      vim.keymap.set('n', '-', reveal_current_file)
     end,
   },
 }
