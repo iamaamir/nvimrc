@@ -2,6 +2,8 @@ return {
   { -- Collection of various small independent plugins/modules
     'echasnovski/mini.nvim',
     config = function()
+      -- session management on steriodsa but not so automatic
+      require('mini.sessions').setup { autoread = true }
       -- Better Around/Inside textobjects
       --
       -- Examples:
