@@ -1,5 +1,6 @@
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
+local map = vim.keymap.set
 
 -- Set highlight on search, but clear on pressing <Esc> in normal mode
 vim.opt.hlsearch = true
@@ -50,4 +51,8 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end,
 })
 
+-- Yank to clipboard
+map('n', 'Y', '"+yg$') --to the end of line
+map('n', 'y', '"+y')
+map('v', 'y', '"+y')
 -- vim: ts=2 sts=2 sw=2 et
