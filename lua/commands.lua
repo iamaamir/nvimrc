@@ -47,4 +47,11 @@ autocmd({ 'FocusGained', 'BufEnter' }, {
   end,
 })
 
+autocmd('VimEnter', {
+  callback = function()
+    if vim.fn.argv(0) == '.' then
+      require('telescope.builtin').find_files()
+    end
+  end,
+})
 -- [[ Basic Autocommands end]]
