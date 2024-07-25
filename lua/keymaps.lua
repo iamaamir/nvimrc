@@ -41,4 +41,27 @@ map('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 map('n', 'Y', '"+yg$') --to the end of line
 map('n', 'y', '"+y')
 map('v', 'y', '"+y')
--- vim: ts=2 sts=2 sw=2 et
+
+--  substitue Current/Selected Word
+map({ 'n', 'v' }, '<leader>st', function()
+  local word
+  if vim.fn.mode() == 'v' or vim.fn.mode() == 'V' or vim.fn.mode() == '\22' then
+    -- Save the current selection
+    vim.cmd 'noau normal! "vy"'
+    word = vim.fn.getreg 'v'
+    vim.fn.setreg('v', {})
+  else
+    word = vim.fn.expand '<cword>'
+  end
+
+  if word == '' then
+    print 'No Selection found'
+    return
+  end
+
+  local escaped = vim.fn.escape(word, '/\\')
+  local cmd = string.format('%%s/%s/', escaped)
+  vim.fn.feedkeys(':' .. cmd, 'n')
+end)
+
+--- vim: ts=2 sts=2 sw=2 et
