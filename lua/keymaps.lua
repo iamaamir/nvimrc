@@ -64,5 +64,11 @@ map({ 'n', 'v' }, '<leader>st', function()
   vim.fn.feedkeys(':' .. cmd, 'n')
 end)
 
+map('n', 'W', function()
+  vim.cmd 'w' -- save the file
+  vim.cmd 'Gw' -- stage the file
+  vim.cmd 'G cmp' -- write the commit a and push it
+end)
+
 map('n', '<leader>gf', [[:lua require('custom.git-fixup').fixup_picker()<CR>]], { noremap = true, silent = true })
 --- vim: ts=2 sts=2 sw=2 et
