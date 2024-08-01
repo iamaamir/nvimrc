@@ -66,7 +66,7 @@ end)
 
 map('n', 'W', function()
   vim.cmd 'w' -- save the file
-  vim.cmd 'Gw' -- stage the file
+  vim.cmd 'Gw!' -- stage the file
   vim.cmd 'G cmp' -- write the commit a and push it
 end)
 
