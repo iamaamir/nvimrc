@@ -4,7 +4,7 @@ local command = vim.api.nvim_create_user_command
 
 -- [[ Basic Commands ]]
 -- e.g command! -nargs=* EslintFix :!npx eslint % --fix
-command('EslintFix', '!npx eslint % --fix', { bang = true })
+command('EslintFix', ':w | !npx eslint % --fix', { bang = true })
 command('BufOnly', 'wa | %bdelete | edit # | bdelete # | normal `"', {})
 -- [[ Basic Commands end]]
 --

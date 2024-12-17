@@ -2,6 +2,27 @@ return {
   { -- Collection of various small independent plugins/modules
     'echasnovski/mini.nvim',
     config = function()
+      -- require('mini.base16').setup {
+      --   palette = {
+      --     base00 = '#FFF1EB', --background
+      --     base01 = '#FFEBE7', -- sidebar & text under cursor and
+      --     base02 = '#FFF9E0', -- selection highlight
+      --     base03 = '#553326', -- comments
+      --     base04 = '#002D70', -- diagnostic
+      --     base05 = '#013614', -- autocomplete box bg
+      --     base06 = '#ffffff', -- yet to figure out
+      --     base07 = '#591B08',
+      --     base08 = '#303030',
+      --     base09 = '#303030',
+      --     base0A = '#3B3B3B',
+      --     base0B = '#112749',
+      --     base0C = '#E05320',
+      --     base0D = '#0265D2',
+      --     base0E = '#049D40',
+      --     base0F = '#DE9C00',
+      --   },
+      --   use_cterm = true,
+      -- }
       -- session management on steriodsa but not so automatic
       require('mini.sessions').setup { autoread = true }
       -- Better Around/Inside textobjects

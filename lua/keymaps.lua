@@ -71,4 +71,29 @@ map('n', 'W', function()
 end)
 
 map('n', '<leader>gf', [[:lua require('custom.git-fixup').fixup_picker()<CR>]], { noremap = true, silent = true })
+
+map('n', '<leader>i', function()
+  local commits = vim.fn.systemlist 'git log --oneline -n 20'
+  vim.ui.select(commits, {
+    prompt = 'Select commit:',
+  }, function(choice)
+    if choice then
+      local commit_hash = choice:match '^%w+'
+      vim.cmd('DiffviewOpen ' .. commit_hash)
+    end
+  end)
+end, { desc = 'list the commits and compare', noremap = true })
+
+map('n', '<leader>T', function()
+  local stashes = vim.fn.systemlist 'git stash list'
+  vim.ui.select(stashes, {
+    prompt = 'Select stash:',
+  }, function(choice)
+    if choice then
+      local stash_name = choice:match '^[^:]+'
+      vim.cmd('Git stash apply ' .. stash_name)
+      vim.cmd 'DiffviewRefresh'
+    end
+  end)
+end)
 --- vim: ts=2 sts=2 sw=2 et
