@@ -49,8 +49,8 @@ function M.run_command()
   for _, cmd in ipairs(M.commands) do
     table.insert(command_names, cmd.name)
   end
-  table.insert(command_names, 'Add New Command')
-  table.insert(command_names, 'Delete Command')
+  table.insert(command_names, ' Add New Command')
+  table.insert(command_names, ' Delete Command')
 
   -- Display a selection menu for the commands
   vim.ui.select(command_names, { prompt = 'Select a command to run:' }, function(choice)
