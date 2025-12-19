@@ -6,6 +6,16 @@ local command = vim.api.nvim_create_user_command
 -- e.g command! -nargs=* EslintFix :!npx eslint % --fix
 command('EslintFix', ':w | !npx eslint % --fix', { bang = true })
 command('BufOnly', 'wa | %bdelete | edit # | bdelete # | normal `"', {})
+
+-- restarts everything except Copilot for the current buffer
+vim.api.nvim_create_user_command('LspRestartSafe', function()
+  local bufnr = vim.api.nvim_get_current_buf()
+  for _, client in ipairs(vim.lsp.get_clients { bufnr = bufnr }) do
+    if client.name ~= 'GitHub Copilot' then
+      pcall(vim.cmd, 'LspRestart ' .. client.name)
+    end
+  end
+end, {})
 -- [[ Basic Commands end]]
 --
 --
