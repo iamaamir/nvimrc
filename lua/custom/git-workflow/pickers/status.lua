@@ -47,6 +47,33 @@ local function unstage_file(filepath)
   end
 end
 
+--- Stage all files
+---@return boolean Success
+local function stage_all()
+  local result = utils.git_system('git add -A')
+  if result then
+    utils.notify_success('Staged all files')
+    return true
+  else
+    utils.notify_error('Failed to stage all files')
+    return false
+  end
+end
+
+--- Unstage all files
+---@return boolean Success
+local function unstage_all()
+  local result = utils.git_system('git reset HEAD --')
+  if result then
+    utils.notify_success('Unstaged all files')
+    return true
+  else
+    utils.notify_error('Failed to unstage all files')
+    return false
+  end
+end
+
+
 --- Get file path from entry
 ---@param entry table Telescope entry
 ---@return string|nil File path
@@ -314,13 +341,47 @@ function M.picker(opts)
         end
       end)
       
+      -- Stage all files: <C-S> (regardless of selection)
+      map('i', '<C-S>', function()
+        if stage_all() then
+          -- Refresh picker to show updated status
+          vim.schedule(function()
+            refresh_picker()
+            show_selection_info()
+          end)
+        end
+      end)
+      
+      -- Unstage all files: <C-U> (regardless of selection)
+      map('i', '<C-U>', function()
+        if unstage_all() then
+          -- Refresh picker to show updated status
+          vim.schedule(function()
+            refresh_picker()
+            show_selection_info()
+          end)
+        end
+      end)
+      
+      -- Commit changes: <C-c> (opens Fugitive commit interface)
+      map('i', '<C-c>', function()
+        -- Close the picker first
+        actions.close(prompt_bufnr)
+        -- Use Fugitive's Git commit command
+        vim.cmd('Git commit')
+      end)
+      
       -- Show initial selection info
       vim.schedule(show_selection_info)
       
-      -- Multi-selection support:
-      --   - Press Tab to toggle selection on current file
-      --   - Selected files will be highlighted (check Telescope highlight groups)
-      --   - Press <C-s> or <C-u> to stage/unstage all selected files
+      -- Keybindings:
+      --   - Tab: Toggle selection on current file (multi-selection)
+      --   - Enter: Open selected file
+      --   - <C-s>: Stage selected file(s) (single or multi-select)
+      --   - <C-u>: Unstage selected file(s) (single or multi-select)
+      --   - <C-S>: Stage all files (regardless of selection)
+      --   - <C-U>: Unstage all files (regardless of selection)
+      --   - <C-c>: Commit changes (opens Fugitive commit interface)
       -- Status codes: M=Modified, A=Added, D=Deleted, ??=Untracked, R=Renamed
       
       return true
