@@ -5,4 +5,31 @@
 return {
   require('custom.command-runner').setup(),
   require('custom.copy-filepath').setup(),
+  -- Git Workflow Plugin - Configure with options
+  require('custom.git-workflow').setup({
+    -- Example: Customize default picker settings (ACTIVE - for testing)
+    picker_defaults = {
+      debounce = 50, -- Prevent UI blocking
+      preview_width = 0.75, -- Wider preview pane (default is 0.65)
+    },
+    
+    -- Example: Customize specific picker options (ACTIVE - for testing)
+    pickers = {
+      fixup = {
+        commit_count = 10, -- Show more commits (default is 30)
+        preview_width = 0.6, -- Override default for this picker
+      },
+      status = {
+        preview_width = 0.5, -- 50-50 split for status picker
+      },
+    },
+    
+    -- Example: Disable notifications (set to false)
+    -- notifications = { enabled = false },
+    
+    -- Example: Disable specific keymaps
+    -- keymaps = {
+    --   legacy_commits = false, -- Disable legacy keymap
+    -- },
+  }),
 }
