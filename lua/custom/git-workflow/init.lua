@@ -38,7 +38,7 @@ local default_config = {
     status = '<leader>gs',
     file_history = '<leader>gh',
     remote = '<leader>gr',
-    gitmoji = '<C-;>',
+    gitmoji = '<leader>gm',
     -- Legacy keymaps
     legacy_commits = '<leader>i',
     legacy_stash = '<leader>T',
