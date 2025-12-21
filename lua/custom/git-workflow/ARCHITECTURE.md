@@ -1,16 +1,8 @@
 # Git Workflow Plugin - Architecture
 
-## Design Principles
-
-1. **Modularity**: Each picker is a separate module
-2. **DRY**: Shared utilities in `utils.lua`
-3. **Extensibility**: Easy to add new pickers via `register_picker()`
-4. **Semantic**: Clear naming and structure
-5. **Best Practices**: Follows Neovim plugin conventions
-
 ## File Structure
 
-```
+```sh
 lua/custom/git-workflow/
 ├── init.lua              # Main plugin entry, config, keymaps
 ├── utils.lua             # Shared utilities (DRY)

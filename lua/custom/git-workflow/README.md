@@ -1,16 +1,6 @@
 # Git Workflow Plugin
 
-A modular, extensible git workflow plugin for Neovim using Telescope.
-
-## Features
-
-- **Uses Telescope built-ins** where available (commits, branches, stash, file history)
-- **Custom status picker** with stage/unstage actions and multi-selection support
-- **Custom pickers** for missing functionality (remotes, fixup commits)
-- **Fully configurable** via `setup()` function
-- **Easy to extend** with new pickers using shared utilities
-- **DRY principles** - shared utilities and common patterns (git status parsing, etc.)
-- **Semantic structure** - clear separation of concerns
+A modular, extensible git workflow plugin for Neovim using Telescope by @iamaamir
 
 ## Structure
 
@@ -232,17 +222,6 @@ local entry = utils.parse_git_status_line(' M file.txt')
 - `<leader>gr` - Git Remote
 - `<leader>i` - Git Commits (legacy)
 - `<leader>T` - Git Stash (legacy)
-
-## Best Practices
-
-1. **Use shared utilities** - Always use `utils` module for common operations
-2. **Validate git repo** - Use `utils.ensure_git_repo()` before operations
-3. **Error handling** - Use `utils.git_systemlist()` and `utils.git_system()` for git commands
-4. **Notifications** - Use `utils.notify_success()`, `utils.notify_error()`, `utils.notify_warn()`
-5. **Lazy loading** - Telescope modules are lazy-loaded automatically
-6. **Git status parsing** - Use `utils.parse_git_status_porcelain()` for parsing git status output
-7. **Entry makers** - Use `utils.create_entry_maker()` for consistent Telescope entries
-8. **String utilities** - Use `utils.shellescape()` and `utils.fnameescape()` for safe command execution
 
 ## Architecture
 
