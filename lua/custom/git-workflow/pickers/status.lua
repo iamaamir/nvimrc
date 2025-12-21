@@ -341,8 +341,8 @@ function M.picker(opts)
         end
       end)
       
-      -- Stage all files: <C-S> (regardless of selection)
-      map('i', '<C-S>', function()
+      -- Stage all files: <C-a> (regardless of selection, a = add all)
+      map('i', '<C-a>', function()
         if stage_all() then
           -- Refresh picker to show updated status
           vim.schedule(function()
@@ -352,8 +352,8 @@ function M.picker(opts)
         end
       end)
       
-      -- Unstage all files: <C-U> (regardless of selection)
-      map('i', '<C-U>', function()
+      -- Unstage all files: <C-x> (regardless of selection, x = remove all)
+      map('i', '<C-x>', function()
         if unstage_all() then
           -- Refresh picker to show updated status
           vim.schedule(function()
@@ -379,8 +379,8 @@ function M.picker(opts)
       --   - Enter: Open selected file
       --   - <C-s>: Stage selected file(s) (single or multi-select)
       --   - <C-u>: Unstage selected file(s) (single or multi-select)
-      --   - <C-S>: Stage all files (regardless of selection)
-      --   - <C-U>: Unstage all files (regardless of selection)
+      --   - <C-a>: Stage all files (regardless of selection)
+      --   - <C-x>: Unstage all files (regardless of selection)
       --   - <C-c>: Commit changes (opens Fugitive commit interface)
       -- Status codes: M=Modified, A=Added, D=Deleted, ??=Untracked, R=Renamed
       
