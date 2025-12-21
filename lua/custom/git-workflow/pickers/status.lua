@@ -18,7 +18,7 @@ local function stage_file(filepath)
   if not filepath then
     return false
   end
-  
+
   local result = utils.git_system('git add ' .. utils.shellescape(filepath))
   if result then
     utils.notify_success('Staged: ' .. filepath)
@@ -36,7 +36,7 @@ local function unstage_file(filepath)
   if not filepath then
     return false
   end
-  
+
   local result = utils.git_system('git reset HEAD -- ' .. utils.shellescape(filepath))
   if result then
     utils.notify_success('Unstaged: ' .. filepath)
@@ -50,12 +50,12 @@ end
 --- Stage all files
 ---@return boolean Success
 local function stage_all()
-  local result = utils.git_system('git add -A')
+  local result = utils.git_system 'git add -A'
   if result then
-    utils.notify_success('Staged all files')
+    utils.notify_success 'Staged all files'
     return true
   else
-    utils.notify_error('Failed to stage all files')
+    utils.notify_error 'Failed to stage all files'
     return false
   end
 end
@@ -63,16 +63,15 @@ end
 --- Unstage all files
 ---@return boolean Success
 local function unstage_all()
-  local result = utils.git_system('git reset HEAD --')
+  local result = utils.git_system 'git reset HEAD --'
   if result then
-    utils.notify_success('Unstaged all files')
+    utils.notify_success 'Unstaged all files'
     return true
   else
-    utils.notify_error('Failed to unstage all files')
+    utils.notify_error 'Failed to unstage all files'
     return false
   end
 end
-
 
 --- Get file path from entry
 ---@param entry table Telescope entry
@@ -81,22 +80,22 @@ local function get_filepath(entry)
   if not entry then
     return nil
   end
-  
+
   -- Format 1: entry.value.path (our custom format)
   if entry.value and type(entry.value) == 'table' and entry.value.path then
     return entry.value.path
   end
-  
+
   -- Format 2: entry.value is the path string
   if entry.value and type(entry.value) == 'string' then
     return entry.value
   end
-  
+
   -- Format 3: entry.path directly
   if entry.path then
     return entry.path
   end
-  
+
   return nil
 end
 
@@ -107,7 +106,7 @@ local function get_status_info(entry)
   if not entry or not entry.value or type(entry.value) ~= 'table' then
     return nil
   end
-  
+
   return {
     is_staged = entry.value.is_staged or false,
     is_unstaged = entry.value.is_unstaged or false,
@@ -122,13 +121,13 @@ local function get_selected_filepaths(prompt_bufnr)
   local action_state = require 'telescope.actions.state'
   local action_utils = require 'telescope.actions.utils'
   local filepaths = {}
-  
+
   -- Get current picker
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   if not current_picker then
     return filepaths
   end
-  
+
   -- Try to get multi-selections first
   local multi_selections = current_picker:get_multi_selection()
   if multi_selections and #multi_selections > 0 then
@@ -139,7 +138,7 @@ local function get_selected_filepaths(prompt_bufnr)
       end
     end
   end
-  
+
   -- If no multi-selections, use current selection
   if #filepaths == 0 then
     local selection = action_state.get_selected_entry()
@@ -150,7 +149,7 @@ local function get_selected_filepaths(prompt_bufnr)
       end
     end
   end
-  
+
   return filepaths
 end
 
@@ -162,29 +161,29 @@ end
 ---@param opts? table Optional configuration
 function M.picker(opts)
   opts = opts or {}
-  
+
   -- Validate git repo
   if not utils.ensure_git_repo() then
     return
   end
-  
+
   local telescope = utils.load_telescope()
-  
+
   -- Get git status with porcelain format for better parsing
   local status_output = utils.git_systemlist('git status --porcelain', 'Failed to get git status')
   if not status_output or #status_output == 0 then
-    utils.notify_warn('No changes found')
+    utils.notify_warn 'No changes found'
     return
   end
-  
+
   -- Parse git status entries with clear staged/unstaged indicators
   local entries = utils.parse_git_status_porcelain(status_output)
-  
+
   if #entries == 0 then
-    utils.notify_warn('No changes found')
+    utils.notify_warn 'No changes found'
     return
   end
-  
+
   -- Create custom picker with enhanced display
   local picker_instance = telescope.pickers.new({}, {
     prompt_title = opts.prompt_title or 'Git Status',
@@ -206,43 +205,43 @@ function M.picker(opts)
     layout_config = opts.preview_width and {
       preview_width = opts.preview_width,
     } or nil,
-    
+
     attach_mappings = function(prompt_bufnr, map)
       local actions = telescope.actions
       local action_state = telescope.action_state
-      
+
       -- Function to refresh picker with updated git status
       local function refresh_picker()
         local current_picker = action_state.get_current_picker(prompt_bufnr)
         if not current_picker then
           return
         end
-        
+
         local new_status = utils.git_systemlist('git status --porcelain', 'Failed to get git status')
         if not new_status then
           return
         end
-        
+
         local new_entries = utils.parse_git_status_porcelain(new_status)
-        
+
         local new_finder = telescope.finders.new_table {
           results = new_entries,
           entry_maker = utils.create_entry_maker(),
         }
         current_picker:refresh(new_finder, { reset_prompt = true })
       end
-      
+
       -- Helper to show current selection info
       local function show_selection_info()
         local current_picker = action_state.get_current_picker(prompt_bufnr)
         if not current_picker then
           return
         end
-        
+
         local selection = action_state.get_selected_entry()
         local multi_selections = current_picker:get_multi_selection()
         local multi_count = multi_selections and #multi_selections or 0
-        
+
         if selection then
           local filepath = get_filepath(selection)
           local status_info = get_status_info(selection)
@@ -257,51 +256,39 @@ function M.picker(opts)
           end
         end
       end
-      
+
       -- Show selection info on navigation (optional - can be removed if too noisy)
       -- map('i', '<Up>', function()
       --   actions.move_selection_previous(prompt_bufnr)
       --   vim.schedule(show_selection_info)
       -- end)
-      -- 
+      --
       -- map('i', '<Down>', function()
       --   actions.move_selection_next(prompt_bufnr)
       --   vim.schedule(show_selection_info)
       -- end)
-      
+
       -- Show info when toggling selection
       map('i', '<Tab>', function()
         actions.toggle_selection(prompt_bufnr)
         vim.schedule(show_selection_info)
       end)
-      
-      -- Default action: Open file
-      actions.select_default:replace(function()
-        local selection = action_state.get_selected_entry()
-        if selection then
-          local filepath = get_filepath(selection)
-          if filepath then
-            actions.close(prompt_bufnr)
-            vim.cmd('edit ' .. utils.fnameescape(filepath))
-          end
-        end
-      end)
-      
-      -- Stage files: <C-s> (supports single and multi-select)
-      map('i', '<C-s>', function()
+
+      -- Normal mode: Stage selected file (s = stage)
+      map('n', 's', function()
         local filepaths = get_selected_filepaths(prompt_bufnr)
         if #filepaths == 0 then
-          utils.notify_warn('No files selected. Use Tab to select files for multi-select.')
+          utils.notify_warn 'No files selected'
           return
         end
-        
+
         local success_count = 0
         for _, filepath in ipairs(filepaths) do
           if stage_file(filepath) then
             success_count = success_count + 1
           end
         end
-        
+
         if success_count > 0 then
           if #filepaths > 1 then
             utils.notify_success('Staged ' .. success_count .. ' file(s)')
@@ -313,22 +300,22 @@ function M.picker(opts)
           end)
         end
       end)
-      
-      -- Unstage files: <C-u> (supports single and multi-select)
-      map('i', '<C-u>', function()
+
+      -- Normal mode: Unstage selected file (u = unstage)
+      map('n', 'u', function()
         local filepaths = get_selected_filepaths(prompt_bufnr)
         if #filepaths == 0 then
-          utils.notify_warn('No files selected. Use Tab to select files for multi-select.')
+          utils.notify_warn 'No files selected'
           return
         end
-        
+
         local success_count = 0
         for _, filepath in ipairs(filepaths) do
           if unstage_file(filepath) then
             success_count = success_count + 1
           end
         end
-        
+
         if success_count > 0 then
           if #filepaths > 1 then
             utils.notify_success('Unstaged ' .. success_count .. ' file(s)')
@@ -340,7 +327,103 @@ function M.picker(opts)
           end)
         end
       end)
-      
+
+      -- Normal mode: Stage all files (a = add all)
+      map('n', 'a', function()
+        if stage_all() then
+          -- Refresh picker to show updated status
+          vim.schedule(function()
+            refresh_picker()
+            show_selection_info()
+          end)
+        end
+      end)
+
+      -- Normal mode: Unstage all files (x = remove all)
+      map('n', 'x', function()
+        if unstage_all() then
+          -- Refresh picker to show updated status
+          vim.schedule(function()
+            refresh_picker()
+            show_selection_info()
+          end)
+        end
+      end)
+
+      -- Normal mode: Commit changes (c = commit)
+      map('n', 'c', function()
+        -- Close the picker first
+        actions.close(prompt_bufnr)
+        -- Use Fugitive's Git commit command
+        vim.cmd 'Git commit'
+      end)
+
+      -- Default action: Open file
+      actions.select_default:replace(function()
+        local selection = action_state.get_selected_entry()
+        if selection then
+          local filepath = get_filepath(selection)
+          if filepath then
+            actions.close(prompt_bufnr)
+            vim.cmd('edit ' .. utils.fnameescape(filepath))
+          end
+        end
+      end)
+
+      -- Stage files: <C-s> (supports single and multi-select)
+      map('i', '<C-s>', function()
+        local filepaths = get_selected_filepaths(prompt_bufnr)
+        if #filepaths == 0 then
+          utils.notify_warn 'No files selected. Use Tab to select files for multi-select.'
+          return
+        end
+
+        local success_count = 0
+        for _, filepath in ipairs(filepaths) do
+          if stage_file(filepath) then
+            success_count = success_count + 1
+          end
+        end
+
+        if success_count > 0 then
+          if #filepaths > 1 then
+            utils.notify_success('Staged ' .. success_count .. ' file(s)')
+          end
+          -- Refresh picker to show updated status
+          vim.schedule(function()
+            refresh_picker()
+            show_selection_info()
+          end)
+        end
+      end)
+
+      -- Unstage files: <C-u> (supports single and multi-select)
+      map('i', '<C-u>', function()
+        local filepaths = get_selected_filepaths(prompt_bufnr)
+        if #filepaths == 0 then
+          utils.notify_warn 'No files selected. Use Tab to select files for multi-select.'
+          return
+        end
+
+        local success_count = 0
+        for _, filepath in ipairs(filepaths) do
+          if unstage_file(filepath) then
+            success_count = success_count + 1
+          end
+        end
+
+        if success_count > 0 then
+          if #filepaths > 1 then
+            utils.notify_success('Unstaged ' .. success_count .. ' file(s)')
+          end
+          -- Refresh picker to show updated status
+          vim.schedule(function()
+            refresh_picker()
+            show_selection_info()
+          end)
+        end
+      end)
+
       -- Stage all files: <C-a> (regardless of selection, a = add all)
       map('i', '<C-a>', function()
         if stage_all() then
@@ -351,7 +434,7 @@ function M.picker(opts)
           end)
         end
       end)
-      
+
       -- Unstage all files: <C-x> (regardless of selection, x = remove all)
       map('i', '<C-x>', function()
         if unstage_all() then
@@ -362,19 +445,20 @@ function M.picker(opts)
           end)
         end
       end)
-      
+
       -- Commit changes: <C-c> (opens Fugitive commit interface)
       map('i', '<C-c>', function()
         -- Close the picker first
         actions.close(prompt_bufnr)
         -- Use Fugitive's Git commit command
-        vim.cmd('Git commit')
+        vim.cmd 'Git commit'
       end)
-      
+
       -- Show initial selection info
       vim.schedule(show_selection_info)
-      
+
       -- Keybindings:
+      -- Insert Mode:
       --   - Tab: Toggle selection on current file (multi-selection)
       --   - Enter: Open selected file
       --   - <C-s>: Stage selected file(s) (single or multi-select)
@@ -382,14 +466,19 @@ function M.picker(opts)
       --   - <C-a>: Stage all files (regardless of selection)
       --   - <C-x>: Unstage all files (regardless of selection)
       --   - <C-c>: Commit changes (opens Fugitive commit interface)
+      -- Normal Mode:
+      --   - s: Stage selected file(s) (single or multi-select)
+      --   - u: Unstage selected file(s) (single or multi-select)
+      --   - a: Stage all files (regardless of selection)
+      --   - x: Unstage all files (regardless of selection)
+      --   - c: Commit changes (opens Fugitive commit interface)
       -- Status codes: M=Modified, A=Added, D=Deleted, ??=Untracked, R=Renamed
-      
+
       return true
     end,
   })
-  
+
   picker_instance:find()
 end
 
 return M
-
