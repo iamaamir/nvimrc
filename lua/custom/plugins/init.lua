@@ -22,6 +22,13 @@ return {
       status = {
         preview_width = 0.5, -- 50-50 split for status picker
       },
+      gitmoji = {
+        -- Add custom gitmojis (appear at the top of the list)
+        custom_gitmojis = {
+          { emoji = "🔧", code = ":eslintfix:", description = "Run ESLint fix", name = "eslintfix" },
+          { emoji = "🧹", code = ":chore:", description = "Chore tasks", name = "chore" },
+        },
+      },
     },
     
     -- Example: Disable notifications (set to false)

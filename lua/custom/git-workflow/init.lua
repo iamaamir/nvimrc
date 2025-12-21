@@ -38,6 +38,7 @@ local default_config = {
     status = '<leader>gs',
     file_history = '<leader>gh',
     remote = '<leader>gr',
+    gitmoji = '<C-;>',
     -- Legacy keymaps
     legacy_commits = '<leader>i',
     legacy_stash = '<leader>T',
@@ -59,6 +60,18 @@ local default_config = {
       prompt_title = 'Git Status',
       debounce = 50,
       preview_width = 0.65,
+    },
+    gitmoji = {
+      prompt_title = 'Gitmoji',
+      debounce = 50,
+      preview_width = 0.65,
+      -- Custom gitmojis to extend the default list (appear at the top)
+      -- Example:
+      -- custom_gitmojis = {
+      --   { emoji = "🔧", code = ":eslintfix:", description = "Run ESLint fix", name = "eslintfix" },
+      --   { emoji = "🧹", code = ":chore:", description = "Chore tasks", name = "chore" },
+      -- }
+      custom_gitmojis = {},
     },
   },
   
@@ -171,6 +184,18 @@ function M.setup_keymaps()
     end, { desc = '[G]it [R]emote', noremap = true, silent = true })
   end
   
+  -- Gitmoji (custom) - supports both insert and normal mode
+  if keymaps.gitmoji then
+    -- Normal mode
+    map('n', keymaps.gitmoji, function()
+      require('custom.git-workflow.pickers.gitmoji').picker(config.pickers.gitmoji)
+    end, { desc = 'Gitmoji', noremap = true, silent = true })
+    -- Insert mode
+    map('i', keymaps.gitmoji, function()
+      require('custom.git-workflow.pickers.gitmoji').picker(config.pickers.gitmoji)
+    end, { desc = 'Gitmoji', noremap = true, silent = true })
+  end
+  
   -- Legacy keymaps
   if keymaps.legacy_commits then
     map('n', keymaps.legacy_commits, function()
@@ -249,6 +274,15 @@ end
 function M.file_history(opts)
   return function()
     require('custom.git-workflow.utils').get_builtin().git_bcommits(opts or config.builtin_opts.git_bcommits)
+  end
+end
+
+--- Get gitmoji picker (custom)
+---@param opts? table Optional picker options
+---@return function Picker function
+function M.gitmoji(opts)
+  return function()
+    require('custom.git-workflow.pickers.gitmoji').picker(opts or config.pickers.gitmoji)
   end
 end
 
