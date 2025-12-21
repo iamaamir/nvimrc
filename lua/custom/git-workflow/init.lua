@@ -39,6 +39,7 @@ local default_config = {
     file_history = '<leader>gh',
     remote = '<leader>gr',
     gitmoji = '<leader>gm',
+    log = '<leader>gl',
     -- Legacy keymaps
     legacy_commits = '<leader>i',
     legacy_stash = '<leader>T',
@@ -72,6 +73,18 @@ local default_config = {
       --   { emoji = "🧹", code = ":chore:", description = "Chore tasks", name = "chore" },
       -- }
       custom_gitmojis = {},
+    },
+    log = {
+      prompt_title = 'Git Log',
+      debounce = 50,
+      preview_width = 0.50,
+      commit_count = 1000,
+      -- Filter options (can be set when calling picker)
+      -- author: string - Filter by author name/email
+      -- since: string - Filter by date (e.g., "2024-01-01", "2 weeks ago")
+      -- until_date: string - Filter until date
+      -- file_path: string - Filter by file path
+      -- grep: string - Search commit messages
     },
   },
   
@@ -264,6 +277,13 @@ function M.setup_keymaps()
       require('custom.git-workflow.pickers.gitmoji').picker(config.pickers.gitmoji)
     end, { desc = 'Gitmoji', noremap = true, silent = true })
   end
+
+  -- Git Log (custom with filters)
+  if keymaps.log then
+    map('n', keymaps.log, function()
+      require('custom.git-workflow.pickers.log').picker(config.pickers.log)
+    end, { desc = '[G]it [L]og', noremap = true, silent = true })
+  end
   
   -- Legacy keymaps
   if keymaps.legacy_commits then
@@ -352,6 +372,15 @@ end
 function M.gitmoji(opts)
   return function()
     require('custom.git-workflow.pickers.gitmoji').picker(opts or config.pickers.gitmoji)
+  end
+end
+
+--- Get log picker (custom with filters)
+---@param opts? table Optional picker options
+---@return function Picker function
+function M.log(opts)
+  return function()
+    require('custom.git-workflow.pickers.log').picker(opts or config.pickers.log)
   end
 end
 
