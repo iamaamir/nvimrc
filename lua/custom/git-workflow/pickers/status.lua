@@ -282,13 +282,14 @@ function M.picker(opts)
       end
 
       -- Show info when toggling selection
-      map('i', '<Tab>', function()
+      local function toggle_selection_action()
         actions.toggle_selection(prompt_bufnr)
         vim.schedule(show_selection_info)
-      end)
+      end
+      map('i', '<Tab>', toggle_selection_action)
 
       -- Normal mode: Stage selected file (s = stage)
-      map('n', 's', function()
+      local function stage_selected_action()
         local filepaths = get_selected_filepaths(prompt_bufnr)
         if #filepaths == 0 then
           utils.notify_warn 'No files selected'
@@ -312,10 +313,11 @@ function M.picker(opts)
             show_selection_info()
           end)
         end
-      end)
+      end
+      map('n', 's', stage_selected_action)
 
       -- Normal mode: Unstage selected file (u = unstage)
-      map('n', 'u', function()
+      local function unstage_selected_action()
         local filepaths = get_selected_filepaths(prompt_bufnr)
         if #filepaths == 0 then
           utils.notify_warn 'No files selected'
@@ -339,10 +341,11 @@ function M.picker(opts)
             show_selection_info()
           end)
         end
-      end)
+      end
+      map('n', 'u', unstage_selected_action)
 
       -- Normal mode: Stage all files (a = add all)
-      map('n', 'a', function()
+      local function stage_all_action()
         if stage_all() then
           -- Refresh picker to show updated status
           vim.schedule(function()
@@ -350,10 +353,11 @@ function M.picker(opts)
             show_selection_info()
           end)
         end
-      end)
+      end
+      map('n', 'a', stage_all_action)
 
       -- Normal mode: Unstage all files (x = remove all)
-      map('n', 'x', function()
+      local function unstage_all_action()
         if unstage_all() then
           -- Refresh picker to show updated status
           vim.schedule(function()
@@ -361,15 +365,17 @@ function M.picker(opts)
             show_selection_info()
           end)
         end
-      end)
+      end
+      map('n', 'x', unstage_all_action)
 
       -- Normal mode: Commit changes (c = commit)
-      map('n', 'c', function()
+      local function commit_changes_action()
         -- Close the picker first
         actions.close(prompt_bufnr)
         -- Use Fugitive's Git commit command
         vim.cmd 'Git commit'
-      end)
+      end
+      map('n', 'c', commit_changes_action)
 
       -- Default action: Open file
       actions.select_default:replace(function()
@@ -384,6 +390,21 @@ function M.picker(opts)
       end)
 
       -- Stage files: <C-s> (supports single and multi-select)
+      map('i', '<C-s>', stage_selected_action)
+      
+      -- Unstage files: <C-u> (supports single and multi-select)
+      map('i', '<C-u>', unstage_selected_action)
+      
+      -- Stage all files: <C-a> (regardless of selection, a = add all)
+      map('i', '<C-a>', stage_all_action)
+      
+      -- Unstage all files: <C-x> (regardless of selection, x = remove all)
+      map('i', '<C-x>', unstage_all_action)
+      
+      -- Commit changes: <C-c> (opens Fugitive commit interface)
+      map('i', '<C-c>', commit_changes_action)
+
+      -- Show initial selection info
       map('i', '<C-s>', function()
         local filepaths = get_selected_filepaths(prompt_bufnr)
         if #filepaths == 0 then
@@ -408,7 +429,7 @@ function M.picker(opts)
             show_selection_info()
           end)
         end
-      end)
+      end, { desc = 'Stage selected file(s)' })
 
       -- Unstage files: <C-u> (supports single and multi-select)
       map('i', '<C-u>', function()
@@ -435,7 +456,7 @@ function M.picker(opts)
             show_selection_info()
           end)
         end
-      end)
+      end, { desc = 'Unstage selected file(s)' })
 
       -- Stage all files: <C-a> (regardless of selection, a = add all)
       map('i', '<C-a>', function()
@@ -446,7 +467,7 @@ function M.picker(opts)
             show_selection_info()
           end)
         end
-      end)
+      end, { desc = 'Stage all files' })
 
       -- Unstage all files: <C-x> (regardless of selection, x = remove all)
       map('i', '<C-x>', function()
@@ -457,7 +478,7 @@ function M.picker(opts)
             show_selection_info()
           end)
         end
-      end)
+      end, { desc = 'Unstage all files' })
 
       -- Commit changes: <C-c> (opens Fugitive commit interface)
       map('i', '<C-c>', function()
@@ -465,7 +486,7 @@ function M.picker(opts)
         actions.close(prompt_bufnr)
         -- Use Fugitive's Git commit command
         vim.cmd 'Git commit'
-      end)
+      end, { desc = 'Commit changes' })
 
       -- Show initial selection info
       vim.schedule(show_selection_info)

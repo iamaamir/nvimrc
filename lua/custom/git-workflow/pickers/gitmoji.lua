@@ -269,7 +269,7 @@ function M.picker(opts)
         end
       end)
       -- Normal mode: 'c' to insert and open commit
-      map('n', 'c', function()
+      local function insert_gitmoji_and_commit_action()
         local selection = action_state.get_selected_entry()
         if selection and selection.value then
           local gitmoji = selection.value
@@ -285,7 +285,8 @@ function M.picker(opts)
             vim.cmd 'Git commit'
           end)
         end
-      end)
+      end
+      map('n', 'c', insert_gitmoji_and_commit_action)
       return true
     end,
   }
