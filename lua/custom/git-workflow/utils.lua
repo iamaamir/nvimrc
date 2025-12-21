@@ -32,11 +32,34 @@ end
 -- Git Repository Validation
 -- ============================================================================
 
+-- Cache for git repo check (per buffer)
+local git_repo_cache = {}
+
 --- Check if current directory is a git repository
+---@param cwd? string Optional working directory to check (defaults to current)
 ---@return boolean True if git repo
-function M.is_git_repo()
-  local result = vim.fn.system('git rev-parse --git-dir 2>/dev/null')
-  return vim.v.shell_error == 0
+function M.is_git_repo(cwd)
+  cwd = cwd or vim.fn.getcwd()
+  
+  -- Check cache first
+  if git_repo_cache[cwd] ~= nil then
+    return git_repo_cache[cwd]
+  end
+  
+  -- Check git repo
+  local cmd = cwd and string.format('cd %s && git rev-parse --git-dir 2>/dev/null', vim.fn.shellescape(cwd)) or 'git rev-parse --git-dir 2>/dev/null'
+  local result = vim.fn.system(cmd)
+  local is_repo = vim.v.shell_error == 0
+  
+  -- Cache result
+  git_repo_cache[cwd] = is_repo
+  
+  return is_repo
+end
+
+--- Clear git repo cache (useful for testing or when repo status changes)
+function M.clear_git_repo_cache()
+  git_repo_cache = {}
 end
 
 --- Validate git repository and show error if not
@@ -84,8 +107,25 @@ end
 ---@param error_msg? string Custom error message
 ---@return table|nil Output lines or nil on error
 function M.git_systemlist(cmd, error_msg)
+  if not cmd then
+    vim.notify('Git command is required', vim.log.levels.ERROR)
+    return nil
+  end
+  
   local cmd_str = type(cmd) == 'table' and table.concat(cmd, ' ') or cmd
-  local output = vim.fn.systemlist(cmd)
+  
+  -- Validate command doesn't contain dangerous patterns
+  if type(cmd_str) == 'string' and (cmd_str:match(';') or cmd_str:match('&&') or cmd_str:match('||')) then
+    vim.notify('Git command contains unsafe characters', vim.log.levels.ERROR)
+    return nil
+  end
+  
+  local ok, output = pcall(vim.fn.systemlist, cmd)
+  if not ok then
+    local err = error_msg or ('Git command execution failed: ' .. cmd_str)
+    vim.notify(err, vim.log.levels.ERROR)
+    return nil
+  end
   
   if vim.v.shell_error ~= 0 then
     local err = error_msg or ('Git command failed: ' .. cmd_str)
@@ -101,8 +141,25 @@ end
 ---@param error_msg? string Custom error message
 ---@return string|nil Output string or nil on error
 function M.git_system(cmd, error_msg)
+  if not cmd then
+    vim.notify('Git command is required', vim.log.levels.ERROR)
+    return nil
+  end
+  
   local cmd_str = type(cmd) == 'table' and table.concat(cmd, ' ') or cmd
-  local output = vim.fn.system(cmd)
+  
+  -- Validate command doesn't contain dangerous patterns
+  if type(cmd_str) == 'string' and (cmd_str:match(';') or cmd_str:match('&&') or cmd_str:match('||')) then
+    vim.notify('Git command contains unsafe characters', vim.log.levels.ERROR)
+    return nil
+  end
+  
+  local ok, output = pcall(vim.fn.system, cmd)
+  if not ok then
+    local err = error_msg or ('Git command execution failed: ' .. cmd_str)
+    vim.notify(err, vim.log.levels.ERROR)
+    return nil
+  end
   
   if vim.v.shell_error ~= 0 then
     local err = error_msg or ('Git command failed: ' .. cmd_str)

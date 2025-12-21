@@ -31,17 +31,26 @@ local function fetch_gitmojis()
   if cached_gitmojis then
     return cached_gitmojis, false -- Using cache
   end
+  
   -- Try to fetch from API
-  local curl_cmd = 'curl -s https://gitmoji.dev/api/gitmojis'
-  local json_output = vim.fn.system(curl_cmd)
-  if vim.v.shell_error ~= 0 or not json_output or json_output == '' then
+  local curl_cmd = 'curl -s --max-time 5 https://gitmoji.dev/api/gitmojis'
+  local ok_fetch, json_output = pcall(vim.fn.system, curl_cmd)
+  
+  if not ok_fetch or vim.v.shell_error ~= 0 or not json_output or json_output == '' then
     return nil, nil -- Failed to fetch
   end
+  
   -- Parse JSON (using vim.json.decode which is available in Neovim 0.7+)
-  local ok, data = pcall(vim.json.decode, json_output)
-  if not ok or not data or not data.gitmojis then
+  local ok_parse, data = pcall(vim.json.decode, json_output)
+  if not ok_parse or not data or not data.gitmojis or type(data.gitmojis) ~= 'table' then
     return nil, nil -- Failed to parse
   end
+  
+  -- Validate gitmojis structure
+  if #data.gitmojis == 0 then
+    return nil, nil -- Empty result
+  end
+  
   cached_gitmojis = data.gitmojis
   return cached_gitmojis, true -- Successfully fetched from API
 end
@@ -170,7 +179,7 @@ function M.picker(opts)
   end
 
   if not gitmojis or #gitmojis == 0 then
-    utils.notify_error 'No gitmojis available'
+    utils.notify_error('No gitmojis available. API fetch failed and no fallback data found.')
     return
   end
 

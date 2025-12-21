@@ -11,15 +11,33 @@ local M = {}
 -- Git Actions
 -- ============================================================================
 
+--- Validate file path for git operations
+---@param filepath string File path to validate
+---@return boolean True if valid
+local function validate_filepath(filepath)
+  if not filepath or type(filepath) ~= 'string' or filepath == '' then
+    return false
+  end
+  
+  -- Check for dangerous patterns
+  if filepath:match('%.%.') or filepath:match('^/') or filepath:match(';') or filepath:match('&&') then
+    return false
+  end
+  
+  return true
+end
+
 --- Stage a file
 ---@param filepath string File path to stage
 ---@return boolean Success
 local function stage_file(filepath)
-  if not filepath then
+  if not validate_filepath(filepath) then
+    utils.notify_error('Invalid file path: ' .. tostring(filepath))
     return false
   end
 
-  local result = utils.git_system('git add ' .. utils.shellescape(filepath))
+  local escaped_path = utils.shellescape(filepath)
+  local result = utils.git_system('git add ' .. escaped_path)
   if result then
     utils.notify_success('Staged: ' .. filepath)
     return true
@@ -33,11 +51,13 @@ end
 ---@param filepath string File path to unstage
 ---@return boolean Success
 local function unstage_file(filepath)
-  if not filepath then
+  if not validate_filepath(filepath) then
+    utils.notify_error('Invalid file path: ' .. tostring(filepath))
     return false
   end
 
-  local result = utils.git_system('git reset HEAD -- ' .. utils.shellescape(filepath))
+  local escaped_path = utils.shellescape(filepath)
+  local result = utils.git_system('git reset HEAD -- ' .. escaped_path)
   if result then
     utils.notify_success('Unstaged: ' .. filepath)
     return true
@@ -170,9 +190,13 @@ function M.picker(opts)
   local telescope = utils.load_telescope()
 
   -- Get git status with porcelain format for better parsing
-  local status_output = utils.git_systemlist('git status --porcelain', 'Failed to get git status')
-  if not status_output or #status_output == 0 then
-    utils.notify_warn 'No changes found'
+  local status_output = utils.git_systemlist('git status --porcelain', 'Failed to get git status. Make sure you are in a git repository.')
+  if not status_output then
+    return
+  end
+  
+  if #status_output == 0 then
+    utils.notify_warn('No changes found. Working tree is clean.')
     return
   end
 
@@ -180,7 +204,7 @@ function M.picker(opts)
   local entries = utils.parse_git_status_porcelain(status_output)
 
   if #entries == 0 then
-    utils.notify_warn 'No changes found'
+    utils.notify_warn('No valid changes found. All files may be ignored or invalid.')
     return
   end
 
@@ -256,17 +280,6 @@ function M.picker(opts)
           end
         end
       end
-
-      -- Show selection info on navigation (optional - can be removed if too noisy)
-      -- map('i', '<Up>', function()
-      --   actions.move_selection_previous(prompt_bufnr)
-      --   vim.schedule(show_selection_info)
-      -- end)
-      --
-      -- map('i', '<Down>', function()
-      --   actions.move_selection_next(prompt_bufnr)
-      --   vim.schedule(show_selection_info)
-      -- end)
 
       -- Show info when toggling selection
       map('i', '<Tab>', function()

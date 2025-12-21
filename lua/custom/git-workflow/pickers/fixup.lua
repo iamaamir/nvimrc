@@ -7,17 +7,40 @@ local utils = require 'custom.git-workflow.utils'
 
 local M = {}
 
+--- Validate commit hash format
+---@param hash string Commit hash
+---@return boolean True if valid
+local function is_valid_hash(hash)
+  return hash and type(hash) == 'string' and hash:match('^[%w]+$') and #hash >= 7
+end
+
 --- Create fixup commit for selected commit
 ---@param commit table Commit info with hash and message
 local function create_fixup(commit)
   if not commit or not commit.hash then
-    utils.notify_error('Invalid commit selection')
+    utils.notify_error('Invalid commit selection: missing commit hash')
     return
   end
   
-  local result = utils.git_system('git commit --fixup=' .. commit.hash)
+  if not is_valid_hash(commit.hash) then
+    utils.notify_error('Invalid commit hash format: ' .. tostring(commit.hash))
+    return
+  end
+  
+  -- Check if there are staged changes
+  -- git diff --cached --quiet returns 0 if there are staged changes, 1 if none
+  local staged_result = vim.fn.system('git diff --cached --quiet')
+  if vim.v.shell_error ~= 0 then
+    -- Exit code 1 means no staged changes
+    utils.notify_error('No staged changes found. Please stage your changes first.')
+    return
+  end
+  
+  local escaped_hash = utils.shellescape(commit.hash)
+  local result = utils.git_system('git commit --fixup=' .. escaped_hash)
   if result then
-    utils.notify_success('Created fixup commit for: ' .. commit.hash .. ' - ' .. (commit.message or ''))
+    local msg = commit.message and (' - ' .. commit.message) or ''
+    utils.notify_success('Created fixup commit for: ' .. commit.hash .. msg)
   else
     utils.notify_error('Failed to create fixup commit. Make sure you have staged changes.')
   end

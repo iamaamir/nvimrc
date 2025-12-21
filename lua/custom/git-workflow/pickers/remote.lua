@@ -20,9 +20,9 @@ function M.picker(opts)
   local telescope = utils.load_telescope()
   
   -- Fetch remotes
-  local output = utils.git_systemlist('git remote -v', 'Failed to fetch remotes')
+  local output = utils.git_systemlist('git remote -v', 'Failed to fetch remotes. Make sure you are in a git repository.')
   if not output or #output == 0 then
-    utils.notify_warn('No remotes found')
+    utils.notify_warn('No remotes found. Add a remote with: git remote add <name> <url>')
     return
   end
   
@@ -45,7 +45,7 @@ function M.picker(opts)
   end
   
   if #entries == 0 then
-    utils.notify_warn('No remotes found')
+    utils.notify_warn('No valid remotes found. Check your git remote configuration.')
     return
   end
   

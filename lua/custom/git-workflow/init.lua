@@ -92,6 +92,64 @@ local config = vim.deepcopy(default_config)
 -- Setup Function
 -- ============================================================================
 
+--- Validate configuration values
+---@param user_config table Configuration to validate
+---@return boolean, string|nil True if valid, error message if invalid
+local function validate_config(user_config)
+  -- Validate picker_defaults
+  if user_config.picker_defaults then
+    local defaults = user_config.picker_defaults
+    if defaults.debounce and (type(defaults.debounce) ~= 'number' or defaults.debounce < 0) then
+      return false, 'picker_defaults.debounce must be a non-negative number'
+    end
+    if defaults.preview_width and (type(defaults.preview_width) ~= 'number' or defaults.preview_width < 0 or defaults.preview_width > 1) then
+      return false, 'picker_defaults.preview_width must be a number between 0 and 1'
+    end
+  end
+  
+  -- Validate notifications
+  if user_config.notifications then
+    local notif = user_config.notifications
+    if notif.enabled ~= nil and type(notif.enabled) ~= 'boolean' then
+      return false, 'notifications.enabled must be a boolean'
+    end
+    if notif.level and not vim.tbl_contains({ vim.log.levels.TRACE, vim.log.levels.DEBUG, vim.log.levels.INFO, vim.log.levels.WARN, vim.log.levels.ERROR }, notif.level) then
+      return false, 'notifications.level must be a valid vim.log.levels value'
+    end
+  end
+  
+  -- Validate picker options
+  if user_config.pickers then
+    for picker_name, picker_opts in pairs(user_config.pickers) do
+      if type(picker_opts) ~= 'table' then
+        return false, string.format('pickers.%s must be a table', picker_name)
+      end
+      if picker_opts.debounce and (type(picker_opts.debounce) ~= 'number' or picker_opts.debounce < 0) then
+        return false, string.format('pickers.%s.debounce must be a non-negative number', picker_name)
+      end
+      if picker_opts.preview_width and (type(picker_opts.preview_width) ~= 'number' or picker_opts.preview_width < 0 or picker_opts.preview_width > 1) then
+        return false, string.format('pickers.%s.preview_width must be a number between 0 and 1', picker_name)
+      end
+      -- Validate gitmoji custom_gitmojis
+      if picker_name == 'gitmoji' and picker_opts.custom_gitmojis then
+        if type(picker_opts.custom_gitmojis) ~= 'table' then
+          return false, 'pickers.gitmoji.custom_gitmojis must be a table'
+        end
+        for i, custom in ipairs(picker_opts.custom_gitmojis) do
+          if type(custom) ~= 'table' then
+            return false, string.format('pickers.gitmoji.custom_gitmojis[%d] must be a table', i)
+          end
+          if not custom.emoji or not custom.code then
+            return false, string.format('pickers.gitmoji.custom_gitmojis[%d] must have emoji and code fields', i)
+          end
+        end
+      end
+    end
+  end
+  
+  return true, nil
+end
+
 --- Setup the plugin with custom configuration
 ---@param user_config? table User configuration to merge with defaults
 ---   - notifications: table - Notification settings { enabled = bool, level = vim.log.levels.* }
@@ -102,9 +160,17 @@ local config = vim.deepcopy(default_config)
 function M.setup(user_config)
   user_config = user_config or {}
   
-  -- Deep merge user config with defaults
-  -- Use 'force' to override defaults with user values
-  config = vim.tbl_deep_extend('force', vim.deepcopy(default_config), user_config)
+  -- Validate configuration
+  local is_valid, error_msg = validate_config(user_config)
+  if not is_valid then
+    vim.notify('Git Workflow: Invalid configuration: ' .. (error_msg or 'unknown error'), vim.log.levels.ERROR)
+    -- Use defaults on validation error
+    config = vim.deepcopy(default_config)
+  else
+    -- Deep merge user config with defaults
+    -- Use 'force' to override defaults with user values
+    config = vim.tbl_deep_extend('force', vim.deepcopy(default_config), user_config)
+  end
   
   -- Merge picker_defaults into individual picker configs if not explicitly set
   for picker_name, picker_opts in pairs(config.pickers) do
@@ -121,7 +187,10 @@ function M.setup(user_config)
   
   -- Setup keymaps if enabled
   if config.keymaps then
-    M.setup_keymaps()
+    local ok, err = pcall(M.setup_keymaps)
+    if not ok then
+      vim.notify('Git Workflow: Failed to setup keymaps: ' .. tostring(err), vim.log.levels.ERROR)
+    end
   end
 end
 
