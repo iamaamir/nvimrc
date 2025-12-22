@@ -22,13 +22,13 @@ local default_config = {
     enabled = true,
     level = vim.log.levels.INFO, -- INFO, WARN, ERROR
   },
-  
+
   -- Global picker settings
   picker_defaults = {
     debounce = 50, -- Prevent UI blocking (especially in Wezterm)
     preview_width = 0.65, -- Default preview width (0.0 to 1.0)
   },
-  
+
   -- Key mappings (set to false to disable)
   keymaps = {
     fixup = '<leader>gf',
@@ -45,7 +45,7 @@ local default_config = {
     legacy_commits = '<leader>i',
     legacy_stash = '<leader>T',
   },
-  
+
   -- Picker options
   pickers = {
     fixup = {
@@ -56,7 +56,7 @@ local default_config = {
     remote = {
       prompt_title = 'Git Remotes',
       results_title = 'Remotes',
-      debounce = 50,
+      debounce = 0,
     },
     status = {
       prompt_title = 'Git Status',
@@ -94,7 +94,7 @@ local default_config = {
       commit_count = 50, -- Number of commits from current branch to show
     },
   },
-  
+
   -- Telescope built-in options (passed directly to builtins)
   builtin_opts = {
     git_commits = {},
@@ -126,18 +126,21 @@ local function validate_config(user_config)
       return false, 'picker_defaults.preview_width must be a number between 0 and 1'
     end
   end
-  
+
   -- Validate notifications
   if user_config.notifications then
     local notif = user_config.notifications
     if notif.enabled ~= nil and type(notif.enabled) ~= 'boolean' then
       return false, 'notifications.enabled must be a boolean'
     end
-    if notif.level and not vim.tbl_contains({ vim.log.levels.TRACE, vim.log.levels.DEBUG, vim.log.levels.INFO, vim.log.levels.WARN, vim.log.levels.ERROR }, notif.level) then
+    if
+      notif.level
+      and not vim.tbl_contains({ vim.log.levels.TRACE, vim.log.levels.DEBUG, vim.log.levels.INFO, vim.log.levels.WARN, vim.log.levels.ERROR }, notif.level)
+    then
       return false, 'notifications.level must be a valid vim.log.levels value'
     end
   end
-  
+
   -- Validate picker options
   if user_config.pickers then
     for picker_name, picker_opts in pairs(user_config.pickers) do
@@ -166,7 +169,7 @@ local function validate_config(user_config)
       end
     end
   end
-  
+
   return true, nil
 end
 
@@ -179,7 +182,7 @@ end
 ---   - builtin_opts: table - Options for Telescope built-ins
 function M.setup(user_config)
   user_config = user_config or {}
-  
+
   -- Validate configuration
   local is_valid, error_msg = validate_config(user_config)
   if not is_valid then
@@ -191,7 +194,7 @@ function M.setup(user_config)
     -- Use 'force' to override defaults with user values
     config = vim.tbl_deep_extend('force', vim.deepcopy(default_config), user_config)
   end
-  
+
   -- Merge picker_defaults into individual picker configs if not explicitly set
   for picker_name, picker_opts in pairs(config.pickers) do
     if not picker_opts.debounce then
@@ -201,10 +204,10 @@ function M.setup(user_config)
       picker_opts.preview_width = config.picker_defaults.preview_width
     end
   end
-  
+
   -- Expose config for utils module (for notification settings)
   M._config = config
-  
+
   -- Setup keymaps if enabled
   if config.keymaps then
     local ok, err = pcall(M.setup_keymaps)
@@ -223,56 +226,56 @@ function M.setup_keymaps()
   local map = vim.keymap.set
   local keymaps = config.keymaps
   local utils = require 'custom.git-workflow.utils'
-  
+
   -- Git Fixup (custom)
   if keymaps.fixup then
     map('n', keymaps.fixup, function()
       require('custom.git-workflow.pickers.fixup').picker(config.pickers.fixup)
     end, { desc = '[G]it [F]ixup commit', noremap = true, silent = true })
   end
-  
+
   -- Git Commits (Telescope built-in)
   if keymaps.commits then
     map('n', keymaps.commits, function()
       utils.get_builtin().git_commits(config.builtin_opts.git_commits)
     end, { desc = '[G]it [C]ommits', noremap = true, silent = true })
   end
-  
+
   -- Git Branches (Telescope built-in)
   if keymaps.branches then
     map('n', keymaps.branches, function()
       utils.get_builtin().git_branches(config.builtin_opts.git_branches)
     end, { desc = '[G]it [B]ranch', noremap = true, silent = true })
   end
-  
+
   -- Git Stash (Telescope built-in)
   if keymaps.stash then
     map('n', keymaps.stash, function()
       utils.get_builtin().git_stash(config.builtin_opts.git_stash)
     end, { desc = '[G]it [S]tash', noremap = true, silent = true })
   end
-  
+
   -- Git Status (Telescope with stage/unstage actions)
   if keymaps.status then
     map('n', keymaps.status, function()
       require('custom.git-workflow.pickers.status').picker(config.pickers.status)
     end, { desc = '[G]it [S]tatus', noremap = true, silent = true })
   end
-  
+
   -- Git File History (Telescope built-in)
   if keymaps.file_history then
     map('n', keymaps.file_history, function()
       utils.get_builtin().git_bcommits(config.builtin_opts.git_bcommits)
     end, { desc = '[G]it File [H]istory', noremap = true, silent = true })
   end
-  
+
   -- Git Remote (custom)
   if keymaps.remote then
     map('n', keymaps.remote, function()
       require('custom.git-workflow.pickers.remote').picker(config.pickers.remote)
     end, { desc = '[G]it [R]emote', noremap = true, silent = true })
   end
-  
+
   -- Gitmoji (custom) - supports both insert and normal mode
   if keymaps.gitmoji then
     -- Normal mode
@@ -298,14 +301,14 @@ function M.setup_keymaps()
       require('custom.git-workflow.pickers.rebase').picker(config.pickers.rebase)
     end, { desc = '[G]it [R]ebase', noremap = true, silent = true })
   end
-  
+
   -- Legacy keymaps
   if keymaps.legacy_commits then
     map('n', keymaps.legacy_commits, function()
       utils.get_builtin().git_commits(config.builtin_opts.git_commits)
     end, { desc = 'List commits and compare (legacy)', noremap = true, silent = true })
   end
-  
+
   if keymaps.legacy_stash then
     map('n', keymaps.legacy_stash, function()
       utils.get_builtin().git_stash(config.builtin_opts.git_stash)
@@ -417,12 +420,12 @@ end
 ---@param default_opts? table Default options for this picker
 function M.register_picker(name, picker_module, default_opts)
   default_opts = default_opts or {}
-  
+
   -- Add to config
   if not config.pickers[name] then
     config.pickers[name] = default_opts
   end
-  
+
   -- Create public API function
   M[name] = function(opts)
     return function()
@@ -431,6 +434,4 @@ function M.register_picker(name, picker_module, default_opts)
   end
 end
 
-
 return M
-
