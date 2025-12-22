@@ -40,6 +40,7 @@ local default_config = {
     remote = '<leader>gr',
     gitmoji = '<leader>gm',
     log = '<leader>gl',
+    rebase = '<leader>gR',
     -- Legacy keymaps
     legacy_commits = '<leader>i',
     legacy_stash = '<leader>T',
@@ -85,6 +86,12 @@ local default_config = {
       -- until_date: string - Filter until date
       -- file_path: string - Filter by file path
       -- grep: string - Search commit messages
+    },
+    rebase = {
+      prompt_title = 'Git Rebase',
+      debounce = 50,
+      preview_width = 0.5,
+      commit_count = 50, -- Number of commits from current branch to show
     },
   },
   
@@ -284,6 +291,13 @@ function M.setup_keymaps()
       require('custom.git-workflow.pickers.log').picker(config.pickers.log)
     end, { desc = '[G]it [L]og', noremap = true, silent = true })
   end
+
+  -- Git Rebase (custom)
+  if keymaps.rebase then
+    map('n', keymaps.rebase, function()
+      require('custom.git-workflow.pickers.rebase').picker(config.pickers.rebase)
+    end, { desc = '[G]it [R]ebase', noremap = true, silent = true })
+  end
   
   -- Legacy keymaps
   if keymaps.legacy_commits then
@@ -381,6 +395,15 @@ end
 function M.log(opts)
   return function()
     require('custom.git-workflow.pickers.log').picker(opts or config.pickers.log)
+  end
+end
+
+--- Get rebase picker (custom)
+---@param opts? table Optional picker options
+---@return function Picker function
+function M.rebase(opts)
+  return function()
+    require('custom.git-workflow.pickers.rebase').picker(opts or config.pickers.rebase)
   end
 end
 
